@@ -3,16 +3,15 @@ import * as fs from "node:fs";
 
 /**
  * Generates an image based on a prompt and saves it to a file.
- * @param {string} prompt - The text prompt for image generation.
- * @param {string} outputPath - The file path to save the generated image.
- * @param {string} apiKey - Optional API key. Defaults to process.env.GOOGLE_API_KEY.
- * @returns {Promise<void>}
+ * @param prompt - The text prompt for image generation.
+ * @param outputPath - The file path to save the generated image.
+ * @param apiKey - Optional API key. Defaults to process.env.GOOGLE_API_KEY.
  */
 export async function generateImage(
-  prompt,
-  outputPath = "output-image.png",
-  apiKey = process.env.GOOGLE_API_KEY,
-) {
+  prompt: string,
+  outputPath: string = "output-image.png",
+  apiKey: string | undefined = process.env.GOOGLE_API_KEY,
+): Promise<void> {
   if (!apiKey) {
     throw new Error(
       "Missing Google API Key. Please set GOOGLE_API_KEY in your environment.",
@@ -24,10 +23,20 @@ export async function generateImage(
 
   const response = await model.generateContent(prompt);
 
-  for (const part of response.response.candidates[0].content.parts) {
-    if (part.text) {
+  const candidates = response.response.candidates;
+  if (!candidates || candidates.length === 0) {
+    throw new Error("No candidates returned from generative model.");
+  }
+
+  const content = candidates[0]?.content;
+  if (!content || !content.parts) {
+    throw new Error("No content parts found in candidate.");
+  }
+
+  for (const part of content.parts) {
+    if ("text" in part && part.text) {
       console.log("Text response:", part.text);
-    } else if (part.inlineData) {
+    } else if ("inlineData" in part && part.inlineData) {
       const imageData = part.inlineData.data;
       const buffer = Buffer.from(imageData, "base64");
       fs.writeFileSync(outputPath, buffer);
@@ -38,9 +47,11 @@ export async function generateImage(
 
 // Bun Server
 if (import.meta.main) {
+  const apiKey = process.env.GOOGLE_API_KEY;
+
   const server = Bun.serve({
     port: 3000,
-    async fetch(req) {
+    async fetch(req: Request) {
       const url = new URL(req.url);
 
       if (url.pathname === "/") {
@@ -57,19 +68,43 @@ if (import.meta.main) {
 
       if (url.pathname === "/api/generate" && req.method === "POST") {
         try {
-          const { prompt } = await req.json();
-          const outputPath = `output-${Date.now()}.png`;
+          const body = (await req.json()) as { prompt?: string };
+          const prompt = body.prompt;
 
-          let imageData;
-          const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+          if (!prompt) {
+            return new Response(
+              JSON.stringify({ error: "Prompt is required" }),
+              {
+                status: 400,
+                headers: { "Content-Type": "application/json" },
+              },
+            );
+          }
+
+          if (!apiKey) {
+            return new Response(JSON.stringify({ error: "API Key missing" }), {
+              status: 500,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
+          let imageData: string | undefined;
+          const genAI = new GoogleGenerativeAI(apiKey);
           const model = genAI.getGenerativeModel({
             model: "nano-banana-pro-preview",
           });
 
           const response = await model.generateContent(prompt);
-          for (const part of response.response.candidates[0].content.parts) {
-            if (part.inlineData) {
-              imageData = part.inlineData.data;
+          const candidates = response.response.candidates;
+
+          if (candidates && candidates.length > 0) {
+            const parts = candidates[0]?.content.parts;
+            if (parts) {
+              for (const part of parts) {
+                if ("inlineData" in part && part.inlineData) {
+                  imageData = part.inlineData.data;
+                }
+              }
             }
           }
 
@@ -81,10 +116,12 @@ if (import.meta.main) {
 
           return new Response(JSON.stringify({ error: "No image generated" }), {
             status: 500,
+            headers: { "Content-Type": "application/json" },
           });
-        } catch (error) {
+        } catch (error: any) {
           return new Response(JSON.stringify({ error: error.message }), {
             status: 500,
+            headers: { "Content-Type": "application/json" },
           });
         }
       }
