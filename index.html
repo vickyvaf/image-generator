@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Generator</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #ffffff;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --input-bg: #f8fafc;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0f172a;
+                --card-bg: #1e293b;
+                --text: #f8fafc;
+                --text-muted: #94a3b8;
+                --border: #334155;
+                --input-bg: #0f172a;
+            }
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            padding: 2.5rem;
+            background: var(--card-bg);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: var(--text);
+            text-align: center;
+            letter-spacing: -0.025em;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        input {
+            flex: 1;
+            padding: 0.625rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--input-bg);
+            color: var(--text);
+            outline: none;
+            transition: all 0.2s;
+            font-size: 0.9375rem;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        button {
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        #result {
+            margin-top: 2rem;
+            text-align: center;
+            min-height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--input-bg);
+            border-radius: 12px;
+            border: 1px dashed var(--border);
+            overflow: hidden;
+        }
+
+        #result img {
+            max-width: 100%;
+            display: block;
+        }
+
+        .placeholder-text {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .loader {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-bottom-color: var(--primary);
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 0.8s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Image Generator</h1>
+        <div class="input-group">
+            <input type="text" id="prompt" placeholder="Describe the image you want..." />
+            <button id="generateBtn">Generate</button>
+        </div>
+        <div id="result">
+            <p class="placeholder-text">Your masterpiece will appear here</p>
+        </div>
+    </div>
+
+
+    <script>
+        const promptInput = document.getElementById('prompt');
+        const generateBtn = document.getElementById('generateBtn');
+        const resultDiv = document.getElementById('result');
+
+        async function generate() {
+            const prompt = promptInput.value.trim();
+            if (!prompt) return;
+
+            // UI State
+            generateBtn.disabled = true;
+            resultDiv.innerHTML = '<span class="loader"></span>';
+
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt })
+                });
+
+                const data = await response.json();
+
+                if (data.image) {
+                    resultDiv.innerHTML = `<img src="data:image/png;base64,${data.image}" alt="Generated Image" />`;
+                } else {
+                    resultDiv.innerHTML = `<p style="color: #ef4444">Error: ${data.error || 'Failed to generate'}</p>`;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<p style="color: #ef4444">Error: ${err.message}</p>`;
+            } finally {
+                generateBtn.disabled = false;
+            }
+        }
+
+        generateBtn.addEventListener('click', generate);
+        promptInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') generate();
+        });
+    </script>
+</body>
+
+</html>

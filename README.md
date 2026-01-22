@@ -1,4 +1,4 @@
-# text-to-image
+# image-generator
 
 To install dependencies:
 

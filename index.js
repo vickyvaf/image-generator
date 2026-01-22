@@ -36,9 +36,56 @@ export async function generateImage(
   }
 }
 
+// Bun Server
 if (import.meta.main) {
-  const prompt =
-    process.argv[2] ||
-    "Create a picture of a nano banana dish in a fancy restaurant with a Gemini theme";
-  generateImage(prompt).catch(console.error);
+  const server = Bun.serve({
+    port: 3000,
+    async fetch(req) {
+      const url = new URL(req.url);
+
+      if (url.pathname === "/") {
+        return new Response(Bun.file("index.html"), {
+          headers: { "Content-Type": "text/html" },
+        });
+      }
+
+      if (url.pathname === "/api/generate" && req.method === "POST") {
+        try {
+          const { prompt } = await req.json();
+          const outputPath = `output-${Date.now()}.png`;
+
+          let imageData;
+          const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+          const model = genAI.getGenerativeModel({
+            model: "nano-banana-pro-preview",
+          });
+
+          const response = await model.generateContent(prompt);
+          for (const part of response.response.candidates[0].content.parts) {
+            if (part.inlineData) {
+              imageData = part.inlineData.data;
+            }
+          }
+
+          if (imageData) {
+            return new Response(JSON.stringify({ image: imageData }), {
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
+          return new Response(JSON.stringify({ error: "No image generated" }), {
+            status: 500,
+          });
+        } catch (error) {
+          return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+          });
+        }
+      }
+
+      return new Response("Not Found", { status: 404 });
+    },
+  });
+
+  console.log(`Server running at http://localhost:${server.port}`);
 }

@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "text-to-image",
+      "name": "image-generator",
       "dependencies": {
         "@google/generative-ai": "^0.21.0",
         "dotenv": "^17.2.3",

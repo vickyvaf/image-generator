@@ -1,10 +1,12 @@
 {
-  "name": "text-to-image",
+  "name": "image-generator",
   "module": "index.js",
   "type": "module",
   "private": true,
   "scripts": {
-    "generate": "bun index.js",
+    "dev": "bun --hot index.js",
+    "build": "bun build ./index.js --outfile dist/index.js",
+    "start": "bun index.js",
     "test": "bun test"
   },
   "devDependencies": {
