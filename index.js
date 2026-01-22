@@ -49,6 +49,12 @@ if (import.meta.main) {
         });
       }
 
+      if (url.pathname === "/style.css") {
+        return new Response(Bun.file("style.css"), {
+          headers: { "Content-Type": "text/css" },
+        });
+      }
+
       if (url.pathname === "/api/generate" && req.method === "POST") {
         try {
           const { prompt } = await req.json();

@@ -1,6 +1,6 @@
 # image-generator
 
-A simple and powerful image generator powered by **Google Gemini** and **Bun**. This project provides both a Command Line Interface (CLI) and a modern Web UI to generate high-quality images from text prompts.
+A simple and powerful image generator powered by **Google Gemini** and **Bun**. This project provides Web UI to generate high-quality images from text prompts.
 
 ## Preview
 
