@@ -2,6 +2,14 @@
 
 A simple and powerful image generator powered by **Google Gemini** and **Bun**. This project provides both a Command Line Interface (CLI) and a modern Web UI to generate high-quality images from text prompts.
 
+## Preview
+
+
+https://github.com/user-attachments/assets/2daacc62-00af-4ce2-88cc-5f4a9fa418e8
+
+
+
+
 ## Features
 
 - **Fast Generation**: Powered by the Gemini 2.0 generative engine.
@@ -42,14 +50,6 @@ Launch the web interface at `http://localhost:3000`:
 
 ```bash
 bun dev
-```
-
-#### CLI
-
-Generate an image directly from the terminal:
-
-```bash
-bun generate "A futuristic city in the style of cyberpunk"
 ```
 
 ---
