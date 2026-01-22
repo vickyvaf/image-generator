@@ -1,0 +1,20 @@
+{
+  "name": "text-to-image",
+  "module": "index.js",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "generate": "bun index.js",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "dotenv": "^17.2.3"
+  }
+}
