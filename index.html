@@ -32,7 +32,7 @@
 
             // UI State
             generateBtn.disabled = true;
-            resultDiv.innerHTML = '<span class="loader"></span>';
+            resultDiv.innerHTML = '<div class="skeleton"></div>';
 
             try {
                 const response = await fetch('/api/generate', {
